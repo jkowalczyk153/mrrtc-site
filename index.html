@@ -9,6 +9,13 @@
 --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--sans:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;font-family:var(--sans);color:var(--ink);background:#fff;line-height:1.6;font-size:17px}
+/* no-white-tail guard: footer is always the last thing on the page.
+   html is footer-dark so any iOS overscroll/overflow never shows white; page fills viewport on short pages. */
+html{background:#232B32;overflow-x:clip}
+body{overflow-x:clip;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+body>main{flex:1 0 auto}
+body>footer{flex:0 0 auto}
+dialog:not([open]){display:none!important}
 img{max-width:100%;display:block}a{color:var(--green-d)}
 :focus-visible{outline:3px solid var(--navy);outline-offset:2px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px}

@@ -96,6 +96,29 @@ with sync_playwright() as p:
     # ---- D. desktop nav order ----
     d = b.new_page(viewport={'width':1280,'height':800}); d.goto('file://' + SRC); d.wait_for_timeout(300)
     check(d.eval_on_selector_all('#hero nav a.l', 'e=>e.map(a=>a.textContent)') == EXPECTED_ORDER, 'desktop hero nav order')
+
+    # ---- E. NO WHITE TAIL: footer must be the last thing on every page, at several phone widths ----
+    from PIL import Image
+    import io
+    ALL_PAGES = [('home','')] + [(pid, '#' + pid) for pid, _ in PAGES]
+    for W, H in [(390, 844), (440, 956), (360, 740)]:
+        t = b.new_context(viewport={'width':W,'height':H}, device_scale_factor=2, is_mobile=True, has_touch=True)
+        tp = t.new_page(); tp.goto('file://' + SRC); tp.wait_for_timeout(500)
+        for pid, frag in ALL_PAGES:
+            tp.evaluate("p=>document.body.setAttribute('data-page',p)", pid); tp.wait_for_timeout(150)
+            r = tp.evaluate("""()=>{const de=document.documentElement,f=document.querySelector('footer');
+              const fb=f.getBoundingClientRect().bottom+scrollY;
+              let low=0;document.querySelectorAll('body *').forEach(e=>{const cs=getComputedStyle(e);
+                if(cs.display==='none'||cs.visibility==='hidden')return;if(e.closest('dialog:not([open])'))return;
+                const b=e.getBoundingClientRect().bottom+scrollY;if(b>low)low=b});
+              return {sh:de.scrollHeight,fb:fb,low:low,sw:de.scrollWidth,iw:innerWidth}}""")
+            ok = abs(r['sh'] - r['fb']) <= 1 and r['low'] <= r['fb'] + 1 and r['sw'] <= r['iw'] + 1
+            check(ok, 'no white tail: %s page @%dpx (doc %d, footer end %d, lowest %d)' % (pid, W, r['sh'], round(r['fb']), round(r['low'])))
+            tp.evaluate("window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'})"); tp.wait_for_timeout(300)
+            im = Image.open(io.BytesIO(tp.screenshot())).convert('RGB'); w, h = im.size
+            px = [im.getpixel((x, h - 2)) for x in range(4, w - 4, max(1, w // 20))]
+            check(all(sum(c) < 400 for c in px), 'bottom edge is footer-dark (not white): %s @%dpx' % (pid, W))
+        t.close()
     b.close()
 
 print('\n%s (%d failure%s)' % ('ALL PASS' if not fails else 'FAILED', len(fails), '' if len(fails) == 1 else 's'))
