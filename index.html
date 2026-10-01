@@ -151,7 +151,7 @@ dialog img{width:100%;height:auto;max-height:90vh;object-fit:contain}dialog butt
 .bar{height:6px;background:var(--gold)}
 
 @media (prefers-reduced-motion:reduce){
-  .slide{transition:none}.slide.active img{animation:none}.dot.active span{animation:none;transform:scaleX(1)}
+  .slide.active img{animation:none}
 }
 </style></head><body>
 <div class="proto" id="proto"><span>Prototype sketch: placeholder colors, copy and photos for review. Not final.</span><button onclick="document.getElementById('proto').remove()">Hide</button></div>
@@ -291,7 +291,7 @@ var f=$('vform');if(f)f.addEventListener('submit',function(e){e.preventDefault()
       credit=document.getElementById('credit'),
       DUR=6000, i=0, timer=null, dots=[];
   hero.style.setProperty('--dur',DUR+'ms');
-  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce=false; /* autoplay stays on even with OS reduce-motion; only the photo zoom is disabled in CSS. Hover/focus pauses. */
   slides.forEach(function(s,n){
     var b=document.createElement('button');
     b.className='dot';b.setAttribute('role','tab');b.setAttribute('aria-label','Photo '+(n+1));
